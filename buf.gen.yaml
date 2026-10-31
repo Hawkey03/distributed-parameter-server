@@ -1,0 +1,14 @@
+version: v2
+
+plugins:
+  # Generate Python message classes
+  - remote: buf.build/protocolbuffers/python:v36.2
+    out: src/generated
+
+  # Generate Python type hints
+  - remote: buf.build/protocolbuffers/pyi:v36.2
+    out: src/generated
+
+  # Generate gRPC client and server stubs
+  - remote: buf.build/grpc/python
+    out: src/generated

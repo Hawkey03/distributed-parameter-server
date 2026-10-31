@@ -7,6 +7,9 @@ setup:
 test:
 	uv run pytest tests/
 
+generate:
+	buf generate
+
 run-server:
 	uv run python -m src.server.main
 

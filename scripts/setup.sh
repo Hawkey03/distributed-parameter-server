@@ -19,17 +19,15 @@ echo "Installing Python dependencies..."
 uv sync --locked
 
 # Generate RPC stubs, if proto definitions exist
-if compgen -G "protos/*.proto" > /dev/null; then
+if compgen -G "proto/*.proto" > /dev/null; then
     echo "Generating gRPC stubs..."
+
+    # Generate Python RPC stubs using buf.gen.yaml
+    buf generate
+
+    # Ensure generated code is a Python package
     mkdir -p src/generated
     touch src/generated/__init__.py
-
-    uv run python -m grpc_tools.protoc \
-        -I protos \
-        --python_out=src/generated \
-        --pyi_out=src/generated \
-        --grpc_python_out=src/generated \
-        protos/*.proto
 fi
 
 echo "Environment setup complete!"
