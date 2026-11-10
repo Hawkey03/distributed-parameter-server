@@ -12,3 +12,7 @@ dev = [
     "grpcio-tools>=1.85.1",
     "pytest>=9.2.0",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "src/generated", "harness"]
+testpaths = ["tests"]

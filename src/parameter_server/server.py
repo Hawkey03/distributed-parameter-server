@@ -59,11 +59,11 @@ def _keys_for(request):
 class ParameterServer(ps_pb2_grpc.ParameterServerServicer):
     """Single-server weight store. Push applies SGD under a lock."""
 
-    def __init__(self, learning_rate: float = 0.01):
+    def __init__(self, learning_rate: float = 0.01, width: int = 1):
         # key -> vector of floats. Missing keys read as zeros of self.width.
         self.weights = {}
         # width of the vector for each key, temporarily kept as width 1
-        self.width = 1
+        self.width = width
         self.learning_rate = learning_rate
         # lock to synchronize access to the weights and width
         self.lock = threading.Lock()
@@ -150,7 +150,6 @@ class ParameterServer(ps_pb2_grpc.ParameterServerServicer):
             for i, key in enumerate(keys):
                 start = i * width
                 current = self._vector(key)
-                # update the weights for the given key
                 self.weights[key] = [
                     current[j] - self.learning_rate * data[start + j] for j in range(width)
                 ]
