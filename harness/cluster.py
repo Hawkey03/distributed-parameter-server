@@ -1,0 +1,1 @@
+# exposes process lifecycle and network-injection controls to the harness.

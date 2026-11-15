@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package parameter_server;
+
+// Pull weights; push gradients (server sums, then SGD). wait() is client-side.
+service ParameterServer {
+  rpc Pull(PullRequest) returns (PullResponse);
+  rpc Push(PushRequest) returns (PushResponse);
+}
+
+// Unique per worker; reused on retry so a push is applied at most once.
+message TaskId {
+  uint32 worker_id = 1;
+  // Counter
+  uint64 seq = 2;
+}
+
+// Sparse keys we want to access
+message KeyList {
+  repeated uint64 keys = 1 [packed = true];
+}
+
+// Dense key range we want to access
+message KeyRange {
+  uint64 begin = 1;
+  uint64 end = 2; // exclusive
+}
+
+message KeySelector {
+  oneof target {
+    KeyList sparse = 1;
+    KeyRange dense = 2;
+  }
+}
+
+// Packed numeric payload. len(data) = n_keys * width.
+// n_keys is len(keys) for sparse, or (end - begin) for dense.
+// Values are 64-bit floats; width >= 1 so each key stores a vector.
+message Tensor {
+  uint32 width = 1;
+  repeated double data = 2 [packed = true];
+}
+
+message PullRequest {
+  // optional namespace; one model is enough for Part A
+  string model_id = 1; 
+  KeySelector target = 2;
+  TaskId task_id = 3;
+  // server must not run this pull until these succeed
+  repeated TaskId deps = 4; 
+}
+
+message PullResponse {
+  Tensor weights = 1;
+  // Echoed only for sparse pulls so the caller can zip keys with data.
+  // Dense pulls omit this: the requested [begin, end) already implies the layout.
+  repeated uint64 keys = 2 [packed = true];
+}
+
+message PushRequest {
+  string model_id = 1;
+  KeySelector target = 2;
+  // same layout as the weights that were pulled
+  Tensor gradients = 3; 
+  TaskId task_id = 4;
+  repeated TaskId deps = 5;
+}
+
+// Confirmation that the update was applied.
+message PushResponse {
+  TaskId task_id = 1;
+}

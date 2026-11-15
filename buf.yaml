@@ -1,0 +1,4 @@
+version: v2
+
+modules:
+  - path: src/parameter_server/proto
